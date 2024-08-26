@@ -2,6 +2,7 @@ package apiserver
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,38 +14,6 @@ import (
 )
 
 func Run() {
-	u1 := &rlnotif.User{
-		ID:        1,
-		Name:      "susy",
-		Email:     "susy@gmail.com",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	u2 := &rlnotif.User{
-		ID:        2,
-		Name:      "john",
-		Email:     "john@gmail.com",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	var repo mysqldb.UserRepo = []*rlnotif.User{u1, u2}
-	// fmt.Printf("Value : %+v. Type: %T\n\n", repo, repo)
-
-	s := mysqldb.NewUserService(&repo)
-	// fmt.Printf("Value : %+v. Type: %T\n\n", s, s)
-	// fmt.Printf("Value : %+v. Type: %T\n\n", s.DB, s.DB)
-
-	// for i := range *s.DB {
-	// 	// fmt.Printf("Value : %+v. Type: %T\n\n", v, v)
-
-	// 	u, _ := s.User(i + 1)
-	// 	fmt.Printf("Value : %+v. Type: %T\n\n", *u, *u)
-	// }
-
-	// fmt.Println("Adding a new user...")
-
 	u3 := &rlnotif.User{
 		ID:        3,
 		Name:      "greg",
@@ -53,18 +22,7 @@ func Run() {
 		UpdatedAt: time.Now(),
 	}
 
-	s.CreateUser(u3)
-
-	// fmt.Println("Updated info:")
-
-	// for i := range *s.DB {
-	// 	// fmt.Printf("Value : %+v. Type: %T\n\n", v, v)
-
-	// 	u, _ := s.User(i + 1)
-	// 	fmt.Printf("Value : %+v. Type: %T\n\n", *u, *u)
-	// }
-
-	db, err := db.NewMySQLStorage(&mysql.Config{
+	cfg := mysql.Config{
 		User:                 config.Envs.DBUSer,
 		Passwd:               config.Envs.DBPassword,
 		Addr:                 config.Envs.DBAddress,
@@ -72,18 +30,42 @@ func Run() {
 		Net:                  "tcp",
 		AllowNativePasswords: true,
 		ParseTime:            true,
-	})
+	}
 
-	initStorage(db)
+	db, err := db.NewMySQLStorage(&cfg)
 
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Will be necessary for the API when there is a server
+	initStorage(db)
+
+	s := mysqldb.NewUserService(db)
+
+	userCreateErr := s.CreateUser(u3)
+	if userCreateErr != nil {
+		log.Fatal(userCreateErr)
+	}
+
+	u, err := s.User(1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("User found: %v\n\n", u)
+
+	users, err := s.Users()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, v := range users {
+		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
 	}
 }
 
 func initStorage(db *sql.DB) {
 	err := db.Ping()
-
 	if err != nil {
 		log.Fatal(err)
 	}
