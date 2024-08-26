@@ -1,11 +1,15 @@
 package apiserver
 
 import (
-	"fmt"
+	"database/sql"
+	"log"
 	"time"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/config"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/db"
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif/mysqldb"
+	"github.com/go-sql-driver/mysql"
 )
 
 func Run() {
@@ -32,14 +36,14 @@ func Run() {
 	// fmt.Printf("Value : %+v. Type: %T\n\n", s, s)
 	// fmt.Printf("Value : %+v. Type: %T\n\n", s.DB, s.DB)
 
-	for i := range *s.DB {
-		// fmt.Printf("Value : %+v. Type: %T\n\n", v, v)
+	// for i := range *s.DB {
+	// 	// fmt.Printf("Value : %+v. Type: %T\n\n", v, v)
 
-		u, _ := s.User(i + 1)
-		fmt.Printf("Value : %+v. Type: %T\n\n", *u, *u)
-	}
+	// 	u, _ := s.User(i + 1)
+	// 	fmt.Printf("Value : %+v. Type: %T\n\n", *u, *u)
+	// }
 
-	fmt.Println("Adding a new user...")
+	// fmt.Println("Adding a new user...")
 
 	u3 := &rlnotif.User{
 		ID:        3,
@@ -51,13 +55,38 @@ func Run() {
 
 	s.CreateUser(u3)
 
-	fmt.Println("Updated info:")
+	// fmt.Println("Updated info:")
 
-	for i := range *s.DB {
-		// fmt.Printf("Value : %+v. Type: %T\n\n", v, v)
+	// for i := range *s.DB {
+	// 	// fmt.Printf("Value : %+v. Type: %T\n\n", v, v)
 
-		u, _ := s.User(i + 1)
-		fmt.Printf("Value : %+v. Type: %T\n\n", *u, *u)
+	// 	u, _ := s.User(i + 1)
+	// 	fmt.Printf("Value : %+v. Type: %T\n\n", *u, *u)
+	// }
+
+	db, err := db.NewMySQLStorage(&mysql.Config{
+		User:                 config.Envs.DBUSer,
+		Passwd:               config.Envs.DBPassword,
+		Addr:                 config.Envs.DBAddress,
+		DBName:               config.Envs.DBName,
+		Net:                  "tcp",
+		AllowNativePasswords: true,
+		ParseTime:            true,
+	})
+
+	initStorage(db)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func initStorage(db *sql.DB) {
+	err := db.Ping()
+
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	log.Println("DB: Successfully connected!")
 }
