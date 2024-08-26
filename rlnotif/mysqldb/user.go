@@ -11,8 +11,6 @@ type UserService struct {
 	DB *sql.DB
 }
 
-type UserRepo []*rlnotif.User
-
 func NewUserService(db *sql.DB) *UserService {
 	return &UserService{DB: db}
 }
@@ -47,7 +45,7 @@ func (s *UserService) Users() ([]*rlnotif.User, error) {
 		return nil, fmt.Errorf("Users: %v", err)
 	}
 	defer rows.Close()
-	// Loop through rows, using Scan to assign column data to struct fields.
+
 	for rows.Next() {
 		var user rlnotif.User
 		if err := rows.Scan(
@@ -71,7 +69,10 @@ func (s *UserService) CreateUser(user *rlnotif.User) error {
 	db := s.DB
 
 	result, err := db.Exec("INSERT INTO users (name, email, created_at, updated_at) VALUES (?, ?, ?, ?)",
-		user.Name, user.Email, user.CreatedAt, user.UpdatedAt,
+		user.Name,
+		user.Email,
+		user.CreatedAt,
+		user.UpdatedAt,
 	)
 	if err != nil {
 		return fmt.Errorf("CreateUser: %v", err)
