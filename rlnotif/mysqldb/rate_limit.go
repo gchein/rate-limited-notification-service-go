@@ -80,10 +80,27 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 	if err != nil {
 		return 0, fmt.Errorf("CreateRateLimit: %v", err)
 	}
+
 	ID, err := result.LastInsertId()
 	if err != nil {
 		return 0, fmt.Errorf("CreateRateLimit: %v", err)
 	}
 
+	err = UpdateRateLimitsCache(s)
+	if err != nil {
+		return ID, err
+	}
+
 	return ID, nil
+}
+
+func UpdateRateLimitsCache(s *RateLimitService) error {
+	newRateLimits, err := s.RateLimits()
+	if err != nil {
+		return fmt.Errorf("RateLimits: %v", err)
+	}
+
+	rlnotif.CacheRateLimits(newRateLimits)
+
+	return nil
 }

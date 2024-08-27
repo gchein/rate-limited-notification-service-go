@@ -14,68 +14,81 @@ import (
 )
 
 func Run() {
-	u1 := &rlnotif.User{
-		Name:      "greg",
-		Email:     "greg@gmail.com",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
 	db := initStorage()
 
-	// User Services test
-	userService := mysqldb.NewUserService(db)
+	// // User Services test
+	// u1 := &rlnotif.User{
+	// 	Name:      "greg",
+	// 	Email:     "greg@gmail.com",
+	// 	CreatedAt: time.Now(),
+	// 	UpdatedAt: time.Now(),
+	// }
 
-	userID, err := userService.CreateUser(u1)
+	// userService := mysqldb.NewUserService(db)
+
+	// userID, err := userService.CreateUser(u1)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// u, err := userService.User(userID)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("User found: %v\n\n", u)
+
+	// users, err := userService.Users()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// for _, v := range users {
+	// 	fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
+	// }
+
+	// // Notification Services test
+	// n1 := &rlnotif.Notification{
+	// 	NotificationType: "Status Update",
+	// 	Message:          "Hello",
+	// 	UserID:           1,
+	// 	CreatedAt:        time.Now(),
+	// 	UpdatedAt:        time.Now(),
+	// }
+
+	// notificationService := mysqldb.NewNotificationService(db)
+
+	// notificationID, err := notificationService.CreateNotification(n1)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// n, err := notificationService.Notification(notificationID)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("Notification found: %v\n\n", n)
+
+	// notifications, err := notificationService.Notifications()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// for _, v := range notifications {
+	// 	fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
+	// }
+
+	rateLimitService := mysqldb.NewRateLimitService(db)
+
+	rateLimits, err := rateLimitService.RateLimits()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	u, err := userService.User(userID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("User found: %v\n\n", u)
+	go rlnotif.CacheRateLimits(rateLimits)
 
-	users, err := userService.Users()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, v := range users {
-		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
-	}
-
-	// Notification Services test
-	n1 := &rlnotif.Notification{
-		NotificationType: "Marketing",
-		Message:          "Hello",
-		UserID:           1,
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
-	}
-
-	notificationService := mysqldb.NewNotificationService(db)
-
-	notificationID, err := notificationService.CreateNotification(n1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	n, err := notificationService.Notification(notificationID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Notification found: %v\n\n", n)
-
-	notifications, err := notificationService.Notifications()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, v := range notifications {
-		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
-	}
+	time.Sleep(time.Second)
+	rateLimitsPerType, exists := rlnotif.RateLimitsFromCache("Status Update")
+	fmt.Printf("%v. Rate limits: %+v.", exists, rateLimitsPerType)
 }
 
 func initStorage() (dbconn *sql.DB) {
