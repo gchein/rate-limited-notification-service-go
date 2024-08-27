@@ -21,24 +21,7 @@ func Run() {
 		UpdatedAt: time.Now(),
 	}
 
-	cfg := mysql.Config{
-		User:                 config.Envs.DBUSer,
-		Passwd:               config.Envs.DBPassword,
-		Addr:                 config.Envs.DBAddress,
-		DBName:               config.Envs.DBName,
-		Net:                  "tcp",
-		AllowNativePasswords: true,
-		ParseTime:            true,
-	}
-
-	db, err := db.NewMySQLStorage(&cfg)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Will be necessary for the API when there is a server
-	initStorage(db)
+	db := initStorage()
 
 	// User Services test
 	userService := mysqldb.NewUserService(db)
@@ -93,8 +76,80 @@ func Run() {
 	for _, v := range notifications {
 		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
 	}
+}
 
-	// RateLimit Services test
+func initStorage() (dbconn *sql.DB) {
+	cfg := mysql.Config{
+		User:                 config.Envs.DBUser,
+		Passwd:               config.Envs.DBPassword,
+		Addr:                 config.Envs.DBAddress,
+		DBName:               config.Envs.DBName,
+		Net:                  "tcp",
+		AllowNativePasswords: true,
+		ParseTime:            true,
+	}
+
+	dbconn, err := db.NewMySQLStorage(&cfg)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = dbconn.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("DB: Successfully connected!")
+
+	return dbconn
+}
+
+func Seed() {
+	db := initStorage()
+
+	// User seeds
+	log.Println("Seeding users...")
+	userService := mysqldb.NewUserService(db)
+
+	u1 := &rlnotif.User{
+		Name:      "greg",
+		Email:     "greg@gmail.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	u2 := &rlnotif.User{
+		Name:      "suzy",
+		Email:     "suzy@gmail.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	u3 := &rlnotif.User{
+		Name:      "john",
+		Email:     "john@gmail.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	users := []*rlnotif.User{
+		u1,
+		u2,
+		u3,
+	}
+
+	for _, v := range users {
+		_, err := userService.CreateUser(v)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Rate Limit seeds
+	log.Println("Seeding rate limits...")
+	rateLimitService := mysqldb.NewRateLimitService(db)
+
 	rl1 := &rlnotif.RateLimit{
 		NotificationType: "Status Update",
 		TimeWindow:       "Minute",
@@ -103,34 +158,77 @@ func Run() {
 		UpdatedAt:        time.Now(),
 	}
 
-	rateLimitService := mysqldb.NewRateLimitService(db)
-
-	rateLimitID, err := rateLimitService.CreateRateLimit(rl1)
-	if err != nil {
-		log.Fatal(err)
+	rl2 := &rlnotif.RateLimit{
+		NotificationType: "Status Update",
+		TimeWindow:       "Hour",
+		MaxLimit:         5,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
-	rl, err := rateLimitService.RateLimit(rateLimitID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("RateLimit found: %v\n\n", rl)
-
-	rateLimits, err := rateLimitService.RateLimits()
-	if err != nil {
-		log.Fatal(err)
+	rl3 := &rlnotif.RateLimit{
+		NotificationType: "Status Update",
+		TimeWindow:       "Day",
+		MaxLimit:         20,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
-	for _, v := range rateLimits {
-		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
-	}
-}
-
-func initStorage(db *sql.DB) {
-	err := db.Ping()
-	if err != nil {
-		log.Fatal(err)
+	rl4 := &rlnotif.RateLimit{
+		NotificationType: "Daily News",
+		TimeWindow:       "Day",
+		MaxLimit:         1,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
-	log.Println("DB: Successfully connected!")
+	rl5 := &rlnotif.RateLimit{
+		NotificationType: "Marketing",
+		TimeWindow:       "Hour",
+		MaxLimit:         3,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	rl6 := &rlnotif.RateLimit{
+		NotificationType: "Marketing",
+		TimeWindow:       "Day",
+		MaxLimit:         10,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	rl7 := &rlnotif.RateLimit{
+		NotificationType: "Project Invitation",
+		TimeWindow:       "Day",
+		MaxLimit:         1,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	rl8 := &rlnotif.RateLimit{
+		NotificationType: "Project Invitation",
+		TimeWindow:       "Month",
+		MaxLimit:         3,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	rate_limits := []*rlnotif.RateLimit{
+		rl1,
+		rl2,
+		rl3,
+		rl4,
+		rl5,
+		rl6,
+		rl7,
+		rl8,
+	}
+
+	for _, v := range rate_limits {
+		_, err := rateLimitService.CreateRateLimit(v)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
