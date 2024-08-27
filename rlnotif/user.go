@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	ID    int    `json:"id"`
+	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 
@@ -14,7 +14,7 @@ type User struct {
 }
 
 type UserService interface {
-	User(id int) (*User, error)
+	User(id int64) (*User, error)
 	Users() ([]*User, error)
 	CreateUser(user *User) error
 }

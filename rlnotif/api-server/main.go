@@ -14,8 +14,7 @@ import (
 )
 
 func Run() {
-	u3 := &rlnotif.User{
-		ID:        3,
+	u1 := &rlnotif.User{
 		Name:      "greg",
 		Email:     "greg@gmail.com",
 		CreatedAt: time.Now(),
@@ -41,25 +40,88 @@ func Run() {
 	// Will be necessary for the API when there is a server
 	initStorage(db)
 
-	s := mysqldb.NewUserService(db)
+	// User Services test
+	userService := mysqldb.NewUserService(db)
 
-	userCreateErr := s.CreateUser(u3)
-	if userCreateErr != nil {
-		log.Fatal(userCreateErr)
+	userID, err := userService.CreateUser(u1)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	u, err := s.User(1)
+	u, err := userService.User(userID)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Printf("User found: %v\n\n", u)
 
-	users, err := s.Users()
+	users, err := userService.Users()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, v := range users {
+		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
+	}
+
+	// Notification Services test
+	n1 := &rlnotif.Notification{
+		NotificationType: "Marketing",
+		Message:          "Hello",
+		UserID:           1,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	notificationService := mysqldb.NewNotificationService(db)
+
+	notificationID, err := notificationService.CreateNotification(n1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	n, err := notificationService.Notification(notificationID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Notification found: %v\n\n", n)
+
+	notifications, err := notificationService.Notifications()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, v := range notifications {
+		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
+	}
+
+	// RateLimit Services test
+	rl1 := &rlnotif.RateLimit{
+		NotificationType: "Status Update",
+		TimeWindow:       "Minute",
+		MaxLimit:         2,
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
+	}
+
+	rateLimitService := mysqldb.NewRateLimitService(db)
+
+	rateLimitID, err := rateLimitService.CreateRateLimit(rl1)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rl, err := rateLimitService.RateLimit(rateLimitID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("RateLimit found: %v\n\n", rl)
+
+	rateLimits, err := rateLimitService.RateLimits()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, v := range rateLimits {
 		fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
 	}
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type Notification struct {
-	ID               int    `json:"id"`
+	ID               int64  `json:"id"`
 	NotificationType string `json:"notificationType"`
 	Message          string `json:"message"`
 	UserID           int    `json:"userId"`
@@ -15,6 +15,7 @@ type Notification struct {
 }
 
 type NotificationService interface {
-	Notification(id int) (*Notification, error)
+	Notification(id int64) (*Notification, error)
+	Notifications() ([]*Notification, error)
 	CreateNotification(notif *Notification) error
 }

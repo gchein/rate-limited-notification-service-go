@@ -15,7 +15,7 @@ func NewUserService(db *sql.DB) *UserService {
 	return &UserService{DB: db}
 }
 
-func (s *UserService) User(id int) (*rlnotif.User, error) {
+func (s *UserService) User(id int64) (*rlnotif.User, error) {
 	db := s.DB
 
 	var user rlnotif.User
@@ -65,7 +65,7 @@ func (s *UserService) Users() ([]*rlnotif.User, error) {
 	return users, nil
 }
 
-func (s *UserService) CreateUser(user *rlnotif.User) error {
+func (s *UserService) CreateUser(user *rlnotif.User) (int64, error) {
 	db := s.DB
 
 	result, err := db.Exec("INSERT INTO users (name, email, created_at, updated_at) VALUES (?, ?, ?, ?)",
@@ -75,12 +75,12 @@ func (s *UserService) CreateUser(user *rlnotif.User) error {
 		user.UpdatedAt,
 	)
 	if err != nil {
-		return fmt.Errorf("CreateUser: %v", err)
+		return 0, fmt.Errorf("CreateUser: %v", err)
 	}
-	_, err = result.LastInsertId()
+	ID, err := result.LastInsertId()
 	if err != nil {
-		return fmt.Errorf("CreateUser: %v", err)
+		return 0, fmt.Errorf("CreateUser: %v", err)
 	}
 
-	return nil
+	return ID, nil
 }
