@@ -2,7 +2,6 @@ package apiserver
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -83,12 +82,23 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	go rlnotif.CacheRateLimits(rateLimits)
-
 	time.Sleep(time.Second)
-	rateLimitsPerType, exists := rlnotif.RateLimitsFromCache("Status Update")
-	fmt.Printf("%v. Rate limits: %+v.", exists, rateLimitsPerType)
+
+	notificationService := mysqldb.NewNotificationService(db)
+	notificationType := "Marketing"
+	userId := "3"
+	message := "Test"
+
+	errChan := make(chan error)
+
+	go func() {
+		errChan <- notificationService.Send(notificationType, userId, message)
+		close(errChan)
+	}()
+	if err := <-errChan; err != nil {
+		log.Fatal(err)
+	}
 }
 
 func initStorage() (dbconn *sql.DB) {
@@ -100,6 +110,7 @@ func initStorage() (dbconn *sql.DB) {
 		Net:                  "tcp",
 		AllowNativePasswords: true,
 		ParseTime:            true,
+		Loc:                  time.Local,
 	}
 
 	dbconn, err := db.NewMySQLStorage(&cfg)
