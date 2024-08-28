@@ -16,5 +16,5 @@ type User struct {
 type UserService interface {
 	User(id int64) (*User, error)
 	Users() ([]*User, error)
-	CreateUser(user *User) error
+	CreateUser(user *User) (int64, error)
 }

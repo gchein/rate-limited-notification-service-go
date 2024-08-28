@@ -18,6 +18,9 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	return &NotificationService{DB: db}
 }
 
+// // Ensure service implements interface.
+// var _ rlnotif.NotificationService = (*NotificationService)(nil)
+
 func (s *NotificationService) Notification(id int64) (*rlnotif.Notification, error) {
 	var notification rlnotif.Notification
 
@@ -82,8 +85,8 @@ func (s *NotificationService) Send(notificationType, userId, message string) err
 		NotificationType: notificationType,
 		Message:          message,
 		UserID:           userID,
-		CreatedAt:        time.Now().In(time.Local),
-		UpdatedAt:        time.Now().In(time.Local),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
 	err = createNotification(s, n)

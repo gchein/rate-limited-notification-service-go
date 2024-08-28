@@ -15,6 +15,9 @@ func NewUserService(db *sql.DB) *UserService {
 	return &UserService{DB: db}
 }
 
+// Ensure service implements interface.
+var _ rlnotif.UserService = (*UserService)(nil)
+
 func (s *UserService) User(id int64) (*rlnotif.User, error) {
 	db := s.DB
 

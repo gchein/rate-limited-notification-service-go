@@ -15,6 +15,9 @@ func NewRateLimitService(db *sql.DB) *RateLimitService {
 	return &RateLimitService{DB: db}
 }
 
+// Ensure service implements interface.
+var _ rlnotif.RateLimitService = (*RateLimitService)(nil)
+
 func (s *RateLimitService) RateLimit(id int64) (*rlnotif.RateLimit, error) {
 	db := s.DB
 
