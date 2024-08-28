@@ -24,11 +24,13 @@ func NewServer(addr string, db *sql.DB) *Server {
 func (s *Server) Run() error {
 	router := mux.NewRouter()
 
-	userService := mysqldb.NewUserService(s.db)
-	userHandler := NewUserHandler(userService)
-	userHandler.RegisterRoutes(router)
+	notificationService := mysqldb.NewNotificationService(s.db)
+	notificationHandler := NewNotificationHandler(notificationService)
+	notificationHandler.RegisterNotificationRoutes(router)
 
-	// [...]
+	rateLimitService := mysqldb.NewRateLimitService(s.db)
+	rateLimitHandler := NewRateLimitHandler(rateLimitService)
+	rateLimitHandler.RegisterRateLimitRoutes(router)
 
 	log.Println("Listening on", s.addr)
 

@@ -18,28 +18,6 @@ func NewRateLimitService(db *sql.DB) *RateLimitService {
 // Ensure service implements interface.
 var _ rlnotif.RateLimitService = (*RateLimitService)(nil)
 
-func (s *RateLimitService) RateLimit(id int64) (*rlnotif.RateLimit, error) {
-	db := s.DB
-
-	var rateLimit rlnotif.RateLimit
-
-	row := db.QueryRow("SELECT * FROM rate_limits WHERE id = ?", id)
-	if err := row.Scan(
-		&rateLimit.ID,
-		&rateLimit.NotificationType,
-		&rateLimit.TimeWindow,
-		&rateLimit.MaxLimit,
-		&rateLimit.CreatedAt,
-		&rateLimit.UpdatedAt,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return &rateLimit, fmt.Errorf("RateLimit %d: no such rate limit", id)
-		}
-		return &rateLimit, fmt.Errorf("RateLimit %d: %v", id, err)
-	}
-	return &rateLimit, nil
-}
-
 func (s *RateLimitService) RateLimits() ([]*rlnotif.RateLimit, error) {
 	db := s.DB
 	var rateLimits []*rlnotif.RateLimit
@@ -71,9 +49,7 @@ func (s *RateLimitService) RateLimits() ([]*rlnotif.RateLimit, error) {
 }
 
 func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64, error) {
-	db := s.DB
-
-	result, err := db.Exec("INSERT INTO rate_limits (notification_type, time_window, max_limit, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+	result, err := s.DB.Exec("INSERT INTO rate_limits (notification_type, time_window, max_limit, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
 		&rateLimit.NotificationType,
 		&rateLimit.TimeWindow,
 		&rateLimit.MaxLimit,
@@ -89,7 +65,7 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 		return 0, fmt.Errorf("CreateRateLimit: %v", err)
 	}
 
-	err = UpdateRateLimitsCache(s)
+	err = s.UpdateRateLimitsCache()
 	if err != nil {
 		return ID, err
 	}
@@ -97,13 +73,19 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 	return ID, nil
 }
 
-func UpdateRateLimitsCache(s *RateLimitService) error {
+func (s *RateLimitService) UpdateRateLimitsCache() error {
 	newRateLimits, err := s.RateLimits()
 	if err != nil {
 		return fmt.Errorf("RateLimits: %v", err)
 	}
 
 	rlnotif.CacheRateLimits(newRateLimits)
+
+	return nil
+}
+
+func (s *RateLimitService) DeleteRateLimit(id int64) error {
+	// Implement
 
 	return nil
 }

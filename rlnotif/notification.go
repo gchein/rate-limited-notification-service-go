@@ -15,7 +15,16 @@ type Notification struct {
 }
 
 type NotificationService interface {
+	NotificationStorage
+	NotificationSender
+}
+
+type NotificationStorage interface {
 	Notification(id int64) (*Notification, error)
 	Notifications() ([]*Notification, error)
-	CreateNotification(notif *Notification) error
+	CreateNotification(notification *Notification) error
+}
+
+type NotificationSender interface {
+	Send(notificationType, userId, message string) error
 }

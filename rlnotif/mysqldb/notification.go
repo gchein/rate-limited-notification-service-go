@@ -18,8 +18,8 @@ func NewNotificationService(db *sql.DB) *NotificationService {
 	return &NotificationService{DB: db}
 }
 
-// // Ensure service implements interface.
-// var _ rlnotif.NotificationService = (*NotificationService)(nil)
+// Ensure service implements interface.
+var _ rlnotif.NotificationService = (*NotificationService)(nil)
 
 func (s *NotificationService) Notification(id int64) (*rlnotif.Notification, error) {
 	var notification rlnotif.Notification
@@ -70,6 +70,21 @@ func (s *NotificationService) Notifications() ([]*rlnotif.Notification, error) {
 	return notifications, nil
 }
 
+func (s *NotificationService) CreateNotification(notification *rlnotif.Notification) error {
+	_, err := s.DB.Exec("INSERT INTO notifications (notification_type, message, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+		&notification.NotificationType,
+		&notification.Message,
+		&notification.UserID,
+		&notification.CreatedAt,
+		&notification.UpdatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("createNotification: %v", err)
+	}
+
+	return nil
+}
+
 func (s *NotificationService) Send(notificationType, userId, message string) error {
 	err := canSendToUser(s, notificationType, userId)
 	if err != nil {
@@ -89,7 +104,7 @@ func (s *NotificationService) Send(notificationType, userId, message string) err
 		UpdatedAt:        time.Now(),
 	}
 
-	err = createNotification(s, n)
+	err = s.CreateNotification(n)
 	if err != nil {
 		return fmt.Errorf("Send: %v", err)
 	}
@@ -156,21 +171,6 @@ func canSendToUser(s *NotificationService, notificationType, userId string) erro
 				userId,
 				notificationType)
 		}
-	}
-
-	return nil
-}
-
-func createNotification(s *NotificationService, notification *rlnotif.Notification) error {
-	_, err := s.DB.Exec("INSERT INTO notifications (notification_type, message, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-		&notification.NotificationType,
-		&notification.Message,
-		&notification.UserID,
-		&notification.CreatedAt,
-		&notification.UpdatedAt,
-	)
-	if err != nil {
-		return fmt.Errorf("createNotification: %v", err)
 	}
 
 	return nil

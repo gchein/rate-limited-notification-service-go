@@ -16,11 +16,18 @@ type RateLimit struct {
 }
 
 type RateLimitService interface {
-	// RateLimit(id int64) (*RateLimit, error)
+	RateLimitStorage
+	RateLimitCacher
+}
+
+type RateLimitStorage interface {
 	RateLimits() ([]*RateLimit, error)
-	// RateLimitsByFields() ([]*RateLimit, error) // Alter to lookup the DB on query fields // Cuidado aqui pra acesso simultaneo à DB que pode estar sendo alterada
 	CreateRateLimit(rateLimit *RateLimit) (int64, error)
-	// DeleteRateLimit()
+	DeleteRateLimit(id int64) error
+}
+
+type RateLimitCacher interface {
+	UpdateRateLimitsCache() error
 }
 
 type rateLimitsCache struct {
