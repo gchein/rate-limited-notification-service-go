@@ -99,7 +99,7 @@ func (s *NotificationService) Send(notificationType, userId, message string) err
 	n := &rlnotif.Notification{
 		NotificationType: notificationType,
 		Message:          message,
-		UserID:           userID,
+		UserID:           int64(userID),
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}

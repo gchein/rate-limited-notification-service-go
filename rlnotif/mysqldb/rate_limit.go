@@ -85,7 +85,21 @@ func (s *RateLimitService) UpdateRateLimitsCache() error {
 }
 
 func (s *RateLimitService) DeleteRateLimit(id int64) error {
-	// Implement
+	query := "DELETE FROM rate_limits WHERE id = ?"
+
+	result, err := s.DB.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("could not delete rate limit: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not determine the number of rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rate limit found with id %d", id)
+	}
 
 	return nil
 }

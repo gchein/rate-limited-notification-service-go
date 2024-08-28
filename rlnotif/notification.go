@@ -8,7 +8,7 @@ type Notification struct {
 	ID               int64  `json:"id"`
 	NotificationType string `json:"notificationType"`
 	Message          string `json:"message"`
-	UserID           int    `json:"userId"`
+	UserID           int64  `json:"userId"`
 
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
