@@ -1,4 +1,4 @@
-.PHONY: db_create db_drop db_reset db_migrate db_seed build run
+.PHONY: db_create db_drop db_reset db_migrate db_seed build run test_db_create test_db_drop test_db_migrate test_db_prepare test
 
 include .env
 
@@ -32,7 +32,6 @@ run: build
 	@./bin/rlnotif
 
 
-
 test_db_create:
 	@echo "Creating test database..."
 	mysql -u $(DB_USER) -p -e "CREATE DATABASE IF NOT EXISTS $(TEST_DB_NAME);"
@@ -50,6 +49,8 @@ test_db_migrate:
 		mysql -u $(DB_USER) -p $(TEST_DB_NAME) < "$$file"; \
 	done
 
+test_db_prepare: test_db_reset test_db_migrate
 
-test: test_db_reset test_db_migrate
-# Here will enter the actual test command
+
+test:
+	@go test -v ./... | grep -v '\[no test files\]'
