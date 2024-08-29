@@ -57,4 +57,4 @@ test_db_prepare: test_db_reset test_db_migrate
 
 
 test:
-	@go test -v ./... | grep -v '\[no test files\]'
+	@go test -v -count=1 ./... | grep -v '\[no test files\]'

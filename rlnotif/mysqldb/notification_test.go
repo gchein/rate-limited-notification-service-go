@@ -26,7 +26,8 @@ func initTestStorage() (DB *sql.DB) {
 	DB, err := db.NewMySQLStorage(&cfg)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error initializing DB:", err)
+		return nil
 	}
 
 	return DB
@@ -34,6 +35,10 @@ func initTestStorage() (DB *sql.DB) {
 
 func TestCreateNotification(t *testing.T) {
 	DB := initTestStorage()
+	if DB == nil {
+		log.Fatal("Failed to initialize database connection")
+	}
+
 	tx, err := DB.Begin()
 	if err != nil {
 		t.Fatalf("Failed to begin transaction: %v", err)
@@ -89,6 +94,10 @@ func TestCreateNotification(t *testing.T) {
 
 func TestSendNotification(t *testing.T) {
 	DB := initTestStorage()
+	if DB == nil {
+		log.Fatal("Failed to initialize database connection")
+	}
+
 	tx, err := DB.Begin()
 	if err != nil {
 		t.Fatalf("Failed to begin transaction: %v", err)

@@ -16,9 +16,11 @@ import (
 
 func Run() {
 	db := initStorage()
+	if db == nil {
+		log.Fatal("Failed to initialize database connection")
+	}
 
 	rateLimitService := mysqldb.NewRateLimitService(db)
-
 	rateLimits, err := rateLimitService.RateLimits()
 	if err != nil {
 		log.Fatal(err)
@@ -45,12 +47,14 @@ func initStorage() (DB *sql.DB) {
 	DB, err := db.NewMySQLStorage(&cfg)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error initializing DB:", err)
+		return nil
 	}
 
 	err = DB.Ping()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error pinging database:", err)
+		return nil
 	}
 
 	log.Println("DB: Successfully connected!")
