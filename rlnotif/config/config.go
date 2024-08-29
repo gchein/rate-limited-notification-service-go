@@ -49,6 +49,7 @@ func LoadEnv() {
 		log.Fatalf("Error getting current working directory: %v", err)
 	}
 
+	// Assumes .env file is in the root of the repo '/rate-limited-notification-service-go'
 	projectRoot := strings.Split(cwd, "/rlnotif")[0]
 	envPath := filepath.Join(projectRoot, ".env")
 

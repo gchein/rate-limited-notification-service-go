@@ -3,7 +3,6 @@ package mysqldb
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +16,9 @@ type NotificationService struct {
 func NewNotificationService(db *sql.DB) *NotificationService {
 	return &NotificationService{DB: db}
 }
+
+// Ensure service implements interface.
+var _ rlnotif.NotificationService = (*NotificationService)(nil)
 
 func (s *NotificationService) Notification(id int64) (*rlnotif.Notification, error) {
 	var notification rlnotif.Notification
@@ -67,26 +69,36 @@ func (s *NotificationService) Notifications() ([]*rlnotif.Notification, error) {
 	return notifications, nil
 }
 
-func (s *NotificationService) Send(notificationType, userId, message string) error {
-	err := canSendToUser(s, notificationType, userId)
+func (s *NotificationService) CreateNotification(notification *rlnotif.Notification) error {
+	_, err := s.DB.Exec("INSERT INTO notifications (notification_type, message, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+		&notification.NotificationType,
+		&notification.Message,
+		&notification.UserID,
+		&notification.CreatedAt,
+		&notification.UpdatedAt,
+	)
 	if err != nil {
-		return err
+		return fmt.Errorf("createNotification: %v", err)
 	}
 
-	userID, err := strconv.Atoi(userId)
+	return nil
+}
+
+func (s *NotificationService) Send(notificationType string, userID int64, message string) error {
+	err := canSendToUser(s, notificationType, userID)
 	if err != nil {
-		return fmt.Errorf("Send: Please verify the user_id provided. %v", err)
+		return err
 	}
 
 	n := &rlnotif.Notification{
 		NotificationType: notificationType,
 		Message:          message,
 		UserID:           userID,
-		CreatedAt:        time.Now().In(time.Local),
-		UpdatedAt:        time.Now().In(time.Local),
+		CreatedAt:        time.Now(),
+		UpdatedAt:        time.Now(),
 	}
 
-	err = createNotification(s, n)
+	err = s.CreateNotification(n)
 	if err != nil {
 		return fmt.Errorf("Send: %v", err)
 	}
@@ -94,11 +106,10 @@ func (s *NotificationService) Send(notificationType, userId, message string) err
 	return nil
 }
 
-func canSendToUser(s *NotificationService, notificationType, userId string) error {
+func canSendToUser(s *NotificationService, notificationType string, userID int64) error {
 
 	rateLimitsPerType, exists := rlnotif.RateLimitsFromCache(notificationType)
 	if !exists {
-		fmt.Println(notificationType, exists)
 		return fmt.Errorf("please verify the Notification Type provided")
 	}
 
@@ -135,13 +146,13 @@ func canSendToUser(s *NotificationService, notificationType, userId string) erro
 		scanResult[i] = &notifCountByTimeWindow[i-1]
 	}
 
-	row := s.DB.QueryRow(query, userId, notificationType)
+	row := s.DB.QueryRow(query, userID, notificationType)
 	if err := row.Scan(scanResult...); err != nil {
 		if err == sql.ErrNoRows {
 			return nil
 		}
 		return fmt.Errorf("error fetching notifications on the database for user_id %v, notification type '%v': %v",
-			userId,
+			userID,
 			notificationType,
 			err,
 		)
@@ -150,24 +161,9 @@ func canSendToUser(s *NotificationService, notificationType, userId string) erro
 	for i, count := range notifCountByTimeWindow {
 		if count == limits[i] {
 			return fmt.Errorf("max Notification Limit reached for user_id %v, notification type '%v'",
-				userId,
+				userID,
 				notificationType)
 		}
-	}
-
-	return nil
-}
-
-func createNotification(s *NotificationService, notification *rlnotif.Notification) error {
-	_, err := s.DB.Exec("INSERT INTO notifications (notification_type, message, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-		&notification.NotificationType,
-		&notification.Message,
-		&notification.UserID,
-		&notification.CreatedAt,
-		&notification.UpdatedAt,
-	)
-	if err != nil {
-		return fmt.Errorf("createNotification: %v", err)
 	}
 
 	return nil

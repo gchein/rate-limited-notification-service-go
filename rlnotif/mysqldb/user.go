@@ -15,12 +15,13 @@ func NewUserService(db *sql.DB) *UserService {
 	return &UserService{DB: db}
 }
 
-func (s *UserService) User(id int64) (*rlnotif.User, error) {
-	db := s.DB
+// Ensure service implements interface.
+var _ rlnotif.UserService = (*UserService)(nil)
 
+func (s *UserService) User(id int64) (*rlnotif.User, error) {
 	var user rlnotif.User
 
-	row := db.QueryRow("SELECT * FROM users WHERE id = ?", id)
+	row := s.DB.QueryRow("SELECT * FROM users WHERE id = ?", id)
 	if err := row.Scan(
 		&user.ID,
 		&user.Name,
@@ -37,10 +38,9 @@ func (s *UserService) User(id int64) (*rlnotif.User, error) {
 }
 
 func (s *UserService) Users() ([]*rlnotif.User, error) {
-	db := s.DB
 	var users []*rlnotif.User
 
-	rows, err := db.Query("SELECT * FROM users")
+	rows, err := s.DB.Query("SELECT * FROM users")
 	if err != nil {
 		return nil, fmt.Errorf("Users: %v", err)
 	}
@@ -66,9 +66,7 @@ func (s *UserService) Users() ([]*rlnotif.User, error) {
 }
 
 func (s *UserService) CreateUser(user *rlnotif.User) (int64, error) {
-	db := s.DB
-
-	result, err := db.Exec("INSERT INTO users (name, email, created_at, updated_at) VALUES (?, ?, ?, ?)",
+	result, err := s.DB.Exec("INSERT INTO users (name, email, created_at, updated_at) VALUES (?, ?, ?, ?)",
 		user.Name,
 		user.Email,
 		user.CreatedAt,

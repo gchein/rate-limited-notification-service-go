@@ -2,12 +2,14 @@ package apiserver
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif/config"
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif/db"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/http"
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif/mysqldb"
 	"github.com/go-sql-driver/mysql"
 )
@@ -83,20 +85,24 @@ func Run() {
 		log.Fatal(err)
 	}
 	go rlnotif.CacheRateLimits(rateLimits)
-	time.Sleep(time.Second)
 
-	notificationService := mysqldb.NewNotificationService(db)
-	notificationType := "Marketing"
-	userId := "3"
-	message := "Test"
+	// notificationService := mysqldb.NewNotificationService(db)
+	// notificationType := "Marketing"
+	// userId := "1"
+	// message := "Test"
 
-	errChan := make(chan error)
+	// errChan := make(chan error)
 
-	go func() {
-		errChan <- notificationService.Send(notificationType, userId, message)
-		close(errChan)
-	}()
-	if err := <-errChan; err != nil {
+	// go func() {
+	// 	errChan <- notificationService.Send(notificationType, userId, message)
+	// 	close(errChan)
+	// }()
+	// if err := <-errChan; err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	server := http.NewServer(fmt.Sprintf(":%s", config.Envs.Port), db)
+	if err := server.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

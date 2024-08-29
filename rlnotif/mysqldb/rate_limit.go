@@ -15,33 +15,13 @@ func NewRateLimitService(db *sql.DB) *RateLimitService {
 	return &RateLimitService{DB: db}
 }
 
-func (s *RateLimitService) RateLimit(id int64) (*rlnotif.RateLimit, error) {
-	db := s.DB
-
-	var rateLimit rlnotif.RateLimit
-
-	row := db.QueryRow("SELECT * FROM rate_limits WHERE id = ?", id)
-	if err := row.Scan(
-		&rateLimit.ID,
-		&rateLimit.NotificationType,
-		&rateLimit.TimeWindow,
-		&rateLimit.MaxLimit,
-		&rateLimit.CreatedAt,
-		&rateLimit.UpdatedAt,
-	); err != nil {
-		if err == sql.ErrNoRows {
-			return &rateLimit, fmt.Errorf("RateLimit %d: no such rate limit", id)
-		}
-		return &rateLimit, fmt.Errorf("RateLimit %d: %v", id, err)
-	}
-	return &rateLimit, nil
-}
+// Ensure service implements interface.
+var _ rlnotif.RateLimitService = (*RateLimitService)(nil)
 
 func (s *RateLimitService) RateLimits() ([]*rlnotif.RateLimit, error) {
-	db := s.DB
 	var rateLimits []*rlnotif.RateLimit
 
-	rows, err := db.Query("SELECT * FROM rate_limits ORDER BY notification_type, max_limit")
+	rows, err := s.DB.Query("SELECT * FROM rate_limits ORDER BY notification_type, max_limit")
 	if err != nil {
 		return nil, fmt.Errorf("RateLimits: %v", err)
 	}
@@ -68,9 +48,7 @@ func (s *RateLimitService) RateLimits() ([]*rlnotif.RateLimit, error) {
 }
 
 func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64, error) {
-	db := s.DB
-
-	result, err := db.Exec("INSERT INTO rate_limits (notification_type, time_window, max_limit, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+	result, err := s.DB.Exec("INSERT INTO rate_limits (notification_type, time_window, max_limit, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
 		&rateLimit.NotificationType,
 		&rateLimit.TimeWindow,
 		&rateLimit.MaxLimit,
@@ -86,7 +64,7 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 		return 0, fmt.Errorf("CreateRateLimit: %v", err)
 	}
 
-	err = UpdateRateLimitsCache(s)
+	err = s.UpdateRateLimitsCache()
 	if err != nil {
 		return ID, err
 	}
@@ -94,13 +72,33 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 	return ID, nil
 }
 
-func UpdateRateLimitsCache(s *RateLimitService) error {
+func (s *RateLimitService) UpdateRateLimitsCache() error {
 	newRateLimits, err := s.RateLimits()
 	if err != nil {
 		return fmt.Errorf("RateLimits: %v", err)
 	}
 
 	rlnotif.CacheRateLimits(newRateLimits)
+
+	return nil
+}
+
+func (s *RateLimitService) DeleteRateLimit(id int64) error {
+	query := "DELETE FROM rate_limits WHERE id = ?"
+
+	result, err := s.DB.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("could not delete rate limit: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not determine the number of rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rate limit found with id %d", id)
+	}
 
 	return nil
 }
