@@ -106,7 +106,7 @@ func (s *NotificationService) Send(notificationType string, userID int64, messag
 	return nil
 }
 
-func canSendToUser(s *NotificationService, notificationType string, userId int64) error {
+func canSendToUser(s *NotificationService, notificationType string, userID int64) error {
 
 	rateLimitsPerType, exists := rlnotif.RateLimitsFromCache(notificationType)
 	if !exists {
@@ -146,13 +146,13 @@ func canSendToUser(s *NotificationService, notificationType string, userId int64
 		scanResult[i] = &notifCountByTimeWindow[i-1]
 	}
 
-	row := s.DB.QueryRow(query, userId, notificationType)
+	row := s.DB.QueryRow(query, userID, notificationType)
 	if err := row.Scan(scanResult...); err != nil {
 		if err == sql.ErrNoRows {
 			return nil
 		}
 		return fmt.Errorf("error fetching notifications on the database for user_id %v, notification type '%v': %v",
-			userId,
+			userID,
 			notificationType,
 			err,
 		)
@@ -161,7 +161,7 @@ func canSendToUser(s *NotificationService, notificationType string, userId int64
 	for i, count := range notifCountByTimeWindow {
 		if count == limits[i] {
 			return fmt.Errorf("max Notification Limit reached for user_id %v, notification type '%v'",
-				userId,
+				userID,
 				notificationType)
 		}
 	}

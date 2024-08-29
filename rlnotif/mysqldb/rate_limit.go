@@ -19,10 +19,9 @@ func NewRateLimitService(db *sql.DB) *RateLimitService {
 var _ rlnotif.RateLimitService = (*RateLimitService)(nil)
 
 func (s *RateLimitService) RateLimits() ([]*rlnotif.RateLimit, error) {
-	db := s.DB
 	var rateLimits []*rlnotif.RateLimit
 
-	rows, err := db.Query("SELECT * FROM rate_limits ORDER BY notification_type, max_limit")
+	rows, err := s.DB.Query("SELECT * FROM rate_limits ORDER BY notification_type, max_limit")
 	if err != nil {
 		return nil, fmt.Errorf("RateLimits: %v", err)
 	}
