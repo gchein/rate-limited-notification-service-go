@@ -8,7 +8,7 @@ type Notification struct {
 	ID               int64  `json:"id"`
 	NotificationType string `json:"notificationType"`
 	Message          string `json:"message"`
-	UserID           int64  `json:"userId"`
+	UserID           int64  `json:"user_id"`
 
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -26,5 +26,5 @@ type NotificationStorage interface {
 }
 
 type NotificationSender interface {
-	Send(notificationType, userId, message string) error
+	Send(notificationType string, userId int64, message string) error
 }

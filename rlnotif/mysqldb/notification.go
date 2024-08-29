@@ -3,7 +3,6 @@ package mysqldb
 import (
 	"database/sql"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -85,21 +84,16 @@ func (s *NotificationService) CreateNotification(notification *rlnotif.Notificat
 	return nil
 }
 
-func (s *NotificationService) Send(notificationType, userId, message string) error {
-	err := canSendToUser(s, notificationType, userId)
+func (s *NotificationService) Send(notificationType string, userID int64, message string) error {
+	err := canSendToUser(s, notificationType, userID)
 	if err != nil {
 		return err
-	}
-
-	userID, err := strconv.Atoi(userId)
-	if err != nil {
-		return fmt.Errorf("Send: Please verify the user_id provided. %v", err)
 	}
 
 	n := &rlnotif.Notification{
 		NotificationType: notificationType,
 		Message:          message,
-		UserID:           int64(userID),
+		UserID:           userID,
 		CreatedAt:        time.Now(),
 		UpdatedAt:        time.Now(),
 	}
@@ -112,11 +106,10 @@ func (s *NotificationService) Send(notificationType, userId, message string) err
 	return nil
 }
 
-func canSendToUser(s *NotificationService, notificationType, userId string) error {
+func canSendToUser(s *NotificationService, notificationType string, userId int64) error {
 
 	rateLimitsPerType, exists := rlnotif.RateLimitsFromCache(notificationType)
 	if !exists {
-		fmt.Println(notificationType, exists)
 		return fmt.Errorf("please verify the Notification Type provided")
 	}
 

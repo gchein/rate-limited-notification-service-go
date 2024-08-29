@@ -59,21 +59,21 @@ func (h *RateLimitHandler) handleDeleteRateLimit(w http.ResponseWriter, r *http.
 	vars := mux.Vars(r)
 	rateLimitId, ok := vars["ID"]
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("missing user ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("ID not found on request"))
 		return
 	}
 
 	rateLimitID, err := strconv.Atoi(rateLimitId)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid user ID"))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid ID"))
 		return
 	}
 
 	err = h.service.DeleteRateLimit(int64(rateLimitID))
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		utils.WriteError(w, http.StatusNotFound, err)
 		return
 	}
 
-	utils.WriteMessage(w, http.StatusOK, "rate Limit successfully deleted")
+	utils.WriteMessage(w, http.StatusOK, "rate limit successfully deleted")
 }

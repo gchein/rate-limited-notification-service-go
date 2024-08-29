@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -20,12 +21,22 @@ func (h *NotificationHandler) RegisterNotificationRoutes(router *mux.Router) {
 }
 
 func (h *NotificationHandler) handlePostNotifications(w http.ResponseWriter, r *http.Request) {
-	// h.service.Send()
+	reqBody := rlnotif.Notification{}
+	if err := utils.ParseJSON(r, &reqBody); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
 
-	// notifications, err := h.service.Notifications()
-	// if err != nil {
-	// 	// utils.WriteError(w, http.StatusInternalServerError, err)
-	// }
+	errChan := make(chan error)
 
-	// utils.WriteJSON(w, http.StatusOK, notifications)
+	go func() {
+		errChan <- h.service.Send(reqBody.NotificationType, reqBody.UserID, reqBody.Message)
+		close(errChan)
+	}()
+	if err := <-errChan; err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteMessage(w, http.StatusOK, reqBody.Message)
 }

@@ -78,14 +78,13 @@ func Run() {
 	// 	fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
 	// }
 
-	// rateLimitService := mysqldb.NewRateLimitService(db)
+	rateLimitService := mysqldb.NewRateLimitService(db)
 
-	// rateLimits, err := rateLimitService.RateLimits()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// go rlnotif.CacheRateLimits(rateLimits)
-	// time.Sleep(time.Second)
+	rateLimits, err := rateLimitService.RateLimits()
+	if err != nil {
+		log.Fatal(err)
+	}
+	go rlnotif.CacheRateLimits(rateLimits)
 
 	// notificationService := mysqldb.NewNotificationService(db)
 	// notificationType := "Marketing"
