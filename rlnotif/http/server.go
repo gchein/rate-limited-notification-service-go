@@ -11,10 +11,10 @@ import (
 
 type Server struct {
 	addr string
-	db   *db.DB
+	db   db.DB
 }
 
-func NewServer(addr string, db *db.DB) *Server {
+func NewServer(addr string, db db.DB) *Server {
 	return &Server{
 		addr: addr,
 		db:   db,
@@ -24,11 +24,11 @@ func NewServer(addr string, db *db.DB) *Server {
 func (s *Server) Run() error {
 	router := mux.NewRouter()
 
-	notificationService := mysqldb.NewNotificationService(*s.db)
+	notificationService := mysqldb.NewNotificationService(s.db)
 	notificationHandler := NewNotificationHandler(&notificationService)
 	notificationHandler.RegisterNotificationRoutes(router)
 
-	rateLimitService := mysqldb.NewRateLimitService(*s.db)
+	rateLimitService := mysqldb.NewRateLimitService(s.db)
 	rateLimitHandler := NewRateLimitHandler(&rateLimitService)
 	rateLimitHandler.RegisterRateLimitRoutes(router)
 
