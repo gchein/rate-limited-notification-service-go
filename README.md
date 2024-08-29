@@ -59,6 +59,7 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
 ## Interacting with the API
 
   The API has the below endpoints:
+
   ```sh
     POST    /notifications    # Sends notification to user, if no rate limits are disrespected
     GET     /rate-limits      # Fetches all current rate limits
@@ -66,15 +67,52 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
     DELETE  /rate-limits/{ID} # Deletes a rate limit
   ```
 
-  You can interact with the application by sending HTTP JSON requests to the endpoints in any way you prefer (cURL, Postman etc.), while passing the necessary attributes:
-  - notification_type
-  - user_id
-  - message
+  You can interact with the application by sending HTTP JSON requests to the endpoints in any way you prefer (cURL, Postman etc.), while passing the necessary attributes.
 
-  Here's an example using cURL (assuming the server is running on port 3000):
+  How to interact with each endpoint:
+
+  **1. POST /notifications**
+
+  This endpoint is the main entry point into the application. It will receive the notification parameters in the request body, and try to create the given notification, for the given user. If no rate limits are exceeded, then the notification is sent to the user (simulated as a JSON return with HTTP Status OK and the message in the body). If the notification would disrespect the rate limits, or if the request contains an error, you get back a response with the corresponding error.
+
+  Below are the fields that are required on the request body:
+
+  - notificationType (string)
+  - userId (integer)
+  - message (string)
+
+  Here's an example using cURL (assuming the server is running on the default port 8080):
 
   ```sh
     curl -X POST http://localhost:8080/notifications \
     -H "Content-Type: application/json" \
-    -d '{"notification_type":"Status Update", "user_id":"1", "message":"Print message if successful"}'
+    -d '{"notificationType":"Status Update", "userId":1, "message":"Print message if successful"}'
+
+    {"message":"Print message if successful"}
+  ```
+
+  **2. GET /rate-limits**
+
+  This endpoint basically fetches all the rate limits that are currently on the database.
+
+  **3. POST /rate-limits**
+
+  This endpoint Is used if you want to create any specific rules you want. It returns with the instance of rule created, if successful.
+
+  Each rate limit consists of a determined max limit of notifications to be sent in a given time window, for a given notification type. For instance, if you wanted to create a limit of maximum 2 notifications per minute on the "Daily News" notification type, you would use the command below.
+
+  Below are the fields that are required on the request body:
+
+  - notificationType (string)
+  - timeWindow (string)
+  - maxLimit (integer)
+
+  Example using cURL:
+
+  ```sh
+    curl -X POST http://localhost:8080/rate-limits \
+    -H "Content-Type: application/json" \
+    -d '{"notificationType":"Daily News", "timeWindow":"Minute", "maxLimit":2}'
+
+    {"id":XX,"notificationType":"Daily News","timeWindow":"Minute","maxLimit":2}
   ```

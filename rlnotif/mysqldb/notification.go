@@ -82,7 +82,7 @@ func (s *NotificationService) CreateNotification(notification *rlnotif.Notificat
 	if err != nil {
 		re := regexp.MustCompile(`(a foreign key constraint fails)(.+)(FOREIGN KEY \(` + "`user_id`" + `\) REFERENCES ` + "`users`" + ` \(` + "`id`" + `\))`)
 		if re.MatchString(err.Error()) {
-			return fmt.Errorf("createNotification: user_ID provided does not exist")
+			return fmt.Errorf("createNotification: userId provided does not exist")
 		}
 
 		return fmt.Errorf("createNotification: %v", err)
@@ -160,7 +160,7 @@ func canSendToUser(s *NotificationService, notificationType string, userID int64
 		if err == sql.ErrNoRows {
 			return nil
 		}
-		return fmt.Errorf("error fetching notifications on the database for user_id %v, notification type '%v': %v",
+		return fmt.Errorf("error fetching notifications on the database for userId %v, notification type '%v': %v",
 			userID,
 			notificationType,
 			err,
@@ -170,7 +170,7 @@ func canSendToUser(s *NotificationService, notificationType string, userID int64
 	for i, count := range notifCountByTimeWindow {
 		if count == limits[i] {
 			maxedOutTW := timeWindows[i]
-			return fmt.Errorf("max %v notification limit reached for user_id %v, notification type '%v'",
+			return fmt.Errorf("max %v notification limit reached for userId %v, notification type '%v'",
 				strings.ToLower(maxedOutTW),
 				userID,
 				notificationType)

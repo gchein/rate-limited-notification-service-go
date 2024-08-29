@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
@@ -91,6 +92,15 @@ func (h *RateLimitHandler) handleDeleteRateLimit(w http.ResponseWriter, r *http.
 	jsonutil.WriteMessage(w, http.StatusOK, "rate limit successfully deleted")
 }
 
+var validTimeWindows = map[string]bool{
+	"SECOND": true,
+	"MINUTE": true,
+	"HOUR":   true,
+	"DAY":    true,
+	"MONTH":  true,
+	"YEAR":   true,
+}
+
 func checkRateLimitParams(rl *rlnotif.RateLimit) error {
 	if rl.NotificationType == "" {
 		return fmt.Errorf("please provide a valid notification type")
@@ -98,6 +108,8 @@ func checkRateLimitParams(rl *rlnotif.RateLimit) error {
 
 	if rl.TimeWindow == "" {
 		return fmt.Errorf("please provide a valid time window")
+	} else if !validTimeWindows[strings.ToUpper(rl.TimeWindow)] {
+		return fmt.Errorf("please provide a valid time window: Second, Minute, Hour, Day, Month, or Year")
 	}
 
 	if rl.MaxLimit <= 0 {

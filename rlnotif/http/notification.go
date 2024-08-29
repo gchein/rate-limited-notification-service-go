@@ -51,11 +51,11 @@ func (h *NotificationHandler) handlePostNotifications(w http.ResponseWriter, r *
 
 func checkNotificationParams(rl *rlnotif.Notification) error {
 	if rl.NotificationType == "" {
-		return fmt.Errorf("please provide a valid notification type")
+		return fmt.Errorf("please provide a valid notificationType")
 	}
 
 	if rl.UserID <= 0 {
-		return fmt.Errorf("please provide a valid user_id")
+		return fmt.Errorf("please provide a valid userId")
 	}
 
 	if rl.Message == "" {
