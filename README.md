@@ -63,7 +63,7 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
   ```sh
     POST    /notifications    # Sends notification to user, if no rate limits are disrespected
     GET     /rate-limits      # Fetches all current rate limits
-    POST    /rate-limits      # Creates a new rate limits
+    POST    /rate-limits      # Creates a new rate limit
     DELETE  /rate-limits/{ID} # Deletes a rate limit
   ```
 
@@ -97,7 +97,7 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
 
   **3. POST /rate-limits**
 
-  This endpoint Is used if you want to create any specific rules you want. It returns with the instance of rule created, if successful.
+  This endpoint is used if you want to create any specific rules you want. It returns with the instance of rule created, if successful.
 
   Each rate limit consists of a determined max limit of notifications to be sent in a given time window, for a given notification type. For instance, if you wanted to create a limit of maximum 2 notifications per minute on the "Daily News" notification type, you would use the command below.
 
@@ -119,7 +119,7 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
 
   **4. DELETE /rate-limits/{ID}**
 
-  Finally, the DELETE endpoint should be used only if you want to delete a specific rate limit from the DB. The usage is pretty simple, you only need to send a DELETE request with a valid id as the end of the request path.
+  Finally, the DELETE endpoint should be used only if you want to delete a specific rate limit from the DB. The usage is pretty simple, you only need to send a DELETE request with a valid id (integer) as the end of the request path (without the brackets).
 
 ## Running the test suite
 
@@ -129,7 +129,7 @@ To run the test suite, first you need to run at least once the command below to 
   make test_db_prepare
   ```
 
-After you ran the command above for preparing the database, run the command below to run the actual tests:
+After you ran at least once the command above for preparing the database, run the command below to run the actual tests:
 
   ```sh
   make test
