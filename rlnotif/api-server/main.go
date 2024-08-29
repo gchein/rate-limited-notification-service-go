@@ -17,67 +17,6 @@ import (
 func Run() {
 	db := initStorage()
 
-	// // User Services test
-	// u1 := &rlnotif.User{
-	// 	Name:      "greg",
-	// 	Email:     "greg@gmail.com",
-	// 	CreatedAt: time.Now(),
-	// 	UpdatedAt: time.Now(),
-	// }
-
-	// userService := mysqldb.NewUserService(db)
-
-	// userID, err := userService.CreateUser(u1)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// u, err := userService.User(userID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Printf("User found: %v\n\n", u)
-
-	// users, err := userService.Users()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// for _, v := range users {
-	// 	fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
-	// }
-
-	// // Notification Services test
-	// n1 := &rlnotif.Notification{
-	// 	NotificationType: "Status Update",
-	// 	Message:          "Hello",
-	// 	UserID:           1,
-	// 	CreatedAt:        time.Now(),
-	// 	UpdatedAt:        time.Now(),
-	// }
-
-	// notificationService := mysqldb.NewNotificationService(db)
-
-	// notificationID, err := notificationService.CreateNotification(n1)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// n, err := notificationService.Notification(notificationID)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Printf("Notification found: %v\n\n", n)
-
-	// notifications, err := notificationService.Notifications()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// for _, v := range notifications {
-	// 	fmt.Printf("Value: %+v. Type: %T\n\n", v, v)
-	// }
-
 	rateLimitService := mysqldb.NewRateLimitService(db)
 
 	rateLimits, err := rateLimitService.RateLimits()
@@ -85,21 +24,6 @@ func Run() {
 		log.Fatal(err)
 	}
 	go rlnotif.CacheRateLimits(rateLimits)
-
-	// notificationService := mysqldb.NewNotificationService(db)
-	// notificationType := "Marketing"
-	// userId := "1"
-	// message := "Test"
-
-	// errChan := make(chan error)
-
-	// go func() {
-	// 	errChan <- notificationService.Send(notificationType, userId, message)
-	// 	close(errChan)
-	// }()
-	// if err := <-errChan; err != nil {
-	// 	log.Fatal(err)
-	// }
 
 	server := http.NewServer(fmt.Sprintf(":%s", config.Envs.Port), db)
 	if err := server.Run(); err != nil {
@@ -118,7 +42,6 @@ func initStorage() (dbconn *sql.DB) {
 		ParseTime:            true,
 		Loc:                  time.Local,
 	}
-
 	dbconn, err := db.NewMySQLStorage(&cfg)
 
 	if err != nil {

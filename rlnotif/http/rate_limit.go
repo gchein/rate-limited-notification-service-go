@@ -3,11 +3,12 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
-	"github.com/gchein/rate-limited-notification-service-go/rlnotif/utils"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/jsonutil"
 	"github.com/gorilla/mux"
 )
 
@@ -28,11 +29,11 @@ func (h *RateLimitHandler) RegisterRateLimitRoutes(router *mux.Router) {
 func (h *RateLimitHandler) handleGetRateLimits(w http.ResponseWriter, r *http.Request) {
 	rateLimits, err := h.service.RateLimits()
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		jsonutil.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, rateLimits)
+	jsonutil.WriteJSON(w, http.StatusOK, rateLimits)
 }
 
 func (h *RateLimitHandler) handlePostRateLimits(w http.ResponseWriter, r *http.Request) {
@@ -40,40 +41,68 @@ func (h *RateLimitHandler) handlePostRateLimits(w http.ResponseWriter, r *http.R
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-	if err := utils.ParseJSON(r, &rl); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	if err := jsonutil.ParseJSON(r, &rl); err != nil {
+		re := regexp.MustCompile(`EOF`)
+		if re.MatchString(err.Error()) {
+			jsonutil.WriteError(w, http.StatusBadRequest, fmt.Errorf("please send a valid request body"))
+			return
+		}
+
+		jsonutil.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err := checkRateLimitParams(&rl)
+	if err != nil {
+		jsonutil.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	id, err := h.service.CreateRateLimit(&rl)
 	if err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		jsonutil.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
 	rl.ID = id
-	utils.WriteJSON(w, http.StatusCreated, rl)
+	jsonutil.WriteJSON(w, http.StatusCreated, rl)
 }
 
 func (h *RateLimitHandler) handleDeleteRateLimit(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	rateLimitId, ok := vars["ID"]
 	if !ok {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("ID not found on request"))
+		jsonutil.WriteError(w, http.StatusBadRequest, fmt.Errorf("ID not found on request"))
 		return
 	}
 
 	rateLimitID, err := strconv.Atoi(rateLimitId)
 	if err != nil {
-		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid ID"))
+		jsonutil.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid ID"))
 		return
 	}
 
 	err = h.service.DeleteRateLimit(int64(rateLimitID))
 	if err != nil {
-		utils.WriteError(w, http.StatusNotFound, err)
+		jsonutil.WriteError(w, http.StatusNotFound, err)
 		return
 	}
 
-	utils.WriteMessage(w, http.StatusOK, "rate limit successfully deleted")
+	jsonutil.WriteMessage(w, http.StatusOK, "rate limit successfully deleted")
+}
+
+func checkRateLimitParams(rl *rlnotif.RateLimit) error {
+	if rl.NotificationType == "" {
+		return fmt.Errorf("please provide a valid notification type")
+	}
+
+	if rl.TimeWindow == "" {
+		return fmt.Errorf("please provide a valid time window")
+	}
+
+	if rl.MaxLimit <= 0 {
+		return fmt.Errorf("please provide a max limit greater than zero")
+	}
+
+	return nil
 }

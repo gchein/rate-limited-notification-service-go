@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS notifications;
 CREATE TABLE notifications (
   id                 BIGINT PRIMARY KEY AUTO_INCREMENT,
   notification_type  VARCHAR(255) NOT NULL,

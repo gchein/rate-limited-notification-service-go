@@ -3,6 +3,7 @@ package mysqldb
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
 )
@@ -56,6 +57,13 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 		&rateLimit.UpdatedAt,
 	)
 	if err != nil {
+		re := regexp.MustCompile(`Duplicate entry`)
+		if re.MatchString(err.Error()) {
+			return 0, fmt.Errorf("CreateRateLimit: Rate Limit already implemented for notification type '%v' and time window '%v'",
+				rateLimit.NotificationType,
+				rateLimit.TimeWindow)
+		}
+
 		return 0, fmt.Errorf("CreateRateLimit: %v", err)
 	}
 

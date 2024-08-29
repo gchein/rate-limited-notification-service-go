@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS rate_limits;
 CREATE TABLE rate_limits (
   id                 BIGINT PRIMARY KEY AUTO_INCREMENT,
   notification_type  VARCHAR(255) NOT NULL,

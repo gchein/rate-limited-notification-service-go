@@ -3,6 +3,7 @@ package mysqldb
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -78,6 +79,11 @@ func (s *NotificationService) CreateNotification(notification *rlnotif.Notificat
 		&notification.UpdatedAt,
 	)
 	if err != nil {
+		re := regexp.MustCompile(`(a foreign key constraint fails)(.+)(FOREIGN KEY \(` + "`user_id`" + `\) REFERENCES ` + "`users`" + ` \(` + "`id`" + `\))`)
+		if re.MatchString(err.Error()) {
+			return fmt.Errorf("createNotification: user_ID provided does not exist")
+		}
+
 		return fmt.Errorf("createNotification: %v", err)
 	}
 
@@ -118,9 +124,11 @@ func canSendToUser(s *NotificationService, notificationType string, userID int64
 					notification_type
 	`
 	var limits []int
+	var timeWindows []string
 
 	for tw, lim := range rateLimitsPerType {
 		limits = append(limits, lim)
+		timeWindows = append(timeWindows, tw)
 
 		query += fmt.Sprintf(
 			", SUM(CASE WHEN created_at >= NOW() - INTERVAL 1 %s THEN 1 ELSE 0 END) AS count_last_%s",
@@ -136,7 +144,7 @@ func canSendToUser(s *NotificationService, notificationType string, userID int64
 		GROUP BY
 				notification_type;
 	`
-	numOfTimeWindows := len(limits)
+	numOfTimeWindows := len(timeWindows)
 	notifCountByTimeWindow := make([]int, numOfTimeWindows)
 	var scanNotifType string
 	scanResult := make([]interface{}, numOfTimeWindows+1)
@@ -160,7 +168,9 @@ func canSendToUser(s *NotificationService, notificationType string, userID int64
 
 	for i, count := range notifCountByTimeWindow {
 		if count == limits[i] {
-			return fmt.Errorf("max Notification Limit reached for user_id %v, notification type '%v'",
+			maxedOutTW := timeWindows[i]
+			return fmt.Errorf("max %v notification limit reached for user_id %v, notification type '%v'",
+				strings.ToLower(maxedOutTW),
 				userID,
 				notificationType)
 		}

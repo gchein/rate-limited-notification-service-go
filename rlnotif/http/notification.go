@@ -1,10 +1,12 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
-	"github.com/gchein/rate-limited-notification-service-go/rlnotif/utils"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/jsonutil"
 	"github.com/gorilla/mux"
 )
 
@@ -22,21 +24,43 @@ func (h *NotificationHandler) RegisterNotificationRoutes(router *mux.Router) {
 
 func (h *NotificationHandler) handlePostNotifications(w http.ResponseWriter, r *http.Request) {
 	reqBody := rlnotif.Notification{}
-	if err := utils.ParseJSON(r, &reqBody); err != nil {
-		utils.WriteError(w, http.StatusBadRequest, err)
+	if err := jsonutil.ParseJSON(r, &reqBody); err != nil {
+		re := regexp.MustCompile(`EOF`)
+		if re.MatchString(err.Error()) {
+			jsonutil.WriteError(w, http.StatusBadRequest, fmt.Errorf("please send a valid request body"))
+			return
+		}
+
+		jsonutil.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	errChan := make(chan error)
-
-	go func() {
-		errChan <- h.service.Send(reqBody.NotificationType, reqBody.UserID, reqBody.Message)
-		close(errChan)
-	}()
-	if err := <-errChan; err != nil {
-		utils.WriteError(w, http.StatusInternalServerError, err)
+	err := checkNotificationParams(&reqBody)
+	if err != nil {
+		jsonutil.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	utils.WriteMessage(w, http.StatusOK, reqBody.Message)
+	if err := h.service.Send(reqBody.NotificationType, reqBody.UserID, reqBody.Message); err != nil {
+		jsonutil.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	jsonutil.WriteMessage(w, http.StatusOK, reqBody.Message)
+}
+
+func checkNotificationParams(rl *rlnotif.Notification) error {
+	if rl.NotificationType == "" {
+		return fmt.Errorf("please provide a valid notification type")
+	}
+
+	if rl.UserID <= 0 {
+		return fmt.Errorf("please provide a valid user_id")
+	}
+
+	if rl.Message == "" {
+		return fmt.Errorf("please provide a message that is not empty")
+	}
+
+	return nil
 }
