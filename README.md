@@ -21,7 +21,7 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
 
     ```
       ### .env file
-      DB_PASSWORD=<SET_THIS> # Required
+      DB_PASSWORD=SET_THIS # Required
 
       # Defaults
       PUBLIC_HOST=http://localhost
@@ -99,7 +99,7 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
 
   This endpoint is used if you want to create any specific rules you want. It returns with the instance of rule created, if successful.
 
-  Each rate limit consists of a determined max limit of notifications to be sent in a given time window, for a given notification type. For instance, if you wanted to create a limit of maximum 2 notifications per minute on the "Daily News" notification type, you would use the command below.
+  Each rate limit consists of a determined max limit of notifications to be sent in a given time window, for a given notification type. For instance, if you wanted to create a limit of maximum 2 notifications per hour on the "Project Update" notification type, you would use the command below.
 
   Below are the fields that are required on the request body:
 
@@ -112,9 +112,9 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
   ```sh
     curl -X POST http://localhost:8080/rate-limits \
     -H "Content-Type: application/json" \
-    -d '{"notificationType":"Daily News", "timeWindow":"Minute", "maxLimit":2}'
+    -d '{"notificationType":"Project Update", "timeWindow":"Hour", "maxLimit":2}'
 
-    {"id":XX,"notificationType":"Daily News","timeWindow":"Minute","maxLimit":2}
+    {"id":XX,"notificationType":"Project Update","timeWindow":"Hour","maxLimit":2}
   ```
 
   **4. DELETE /rate-limits/{ID}**

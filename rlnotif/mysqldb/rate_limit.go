@@ -80,17 +80,6 @@ func (s *RateLimitService) CreateRateLimit(rateLimit *rlnotif.RateLimit) (int64,
 	return ID, nil
 }
 
-func (s *RateLimitService) UpdateRateLimitsCache() error {
-	newRateLimits, err := s.RateLimits()
-	if err != nil {
-		return fmt.Errorf("RateLimits: %v", err)
-	}
-
-	rlnotif.CacheRateLimits(newRateLimits)
-
-	return nil
-}
-
 func (s *RateLimitService) DeleteRateLimit(id int64) error {
 	query := "DELETE FROM rate_limits WHERE id = ?"
 
@@ -107,6 +96,22 @@ func (s *RateLimitService) DeleteRateLimit(id int64) error {
 	if rowsAffected == 0 {
 		return fmt.Errorf("no rate limit found with id %d", id)
 	}
+
+	err = s.UpdateRateLimitsCache()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *RateLimitService) UpdateRateLimitsCache() error {
+	newRateLimits, err := s.RateLimits()
+	if err != nil {
+		return fmt.Errorf("RateLimits: %v", err)
+	}
+
+	rlnotif.CacheRateLimits(newRateLimits)
 
 	return nil
 }
