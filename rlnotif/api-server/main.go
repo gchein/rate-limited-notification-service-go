@@ -31,7 +31,7 @@ func Run() {
 	}
 }
 
-func initStorage() (dbconn *sql.DB) {
+func initStorage() (DB *sql.DB) {
 	cfg := mysql.Config{
 		User:                 config.Envs.DBUser,
 		Passwd:               config.Envs.DBPassword,
@@ -42,20 +42,20 @@ func initStorage() (dbconn *sql.DB) {
 		ParseTime:            true,
 		Loc:                  time.Local,
 	}
-	dbconn, err := db.NewMySQLStorage(&cfg)
+	DB, err := db.NewMySQLStorage(&cfg)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = dbconn.Ping()
+	err = DB.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Println("DB: Successfully connected!")
 
-	return dbconn
+	return DB
 }
 
 func Seed() {

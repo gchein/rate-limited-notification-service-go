@@ -5,14 +5,15 @@ import (
 	"fmt"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/db"
 )
 
 type UserService struct {
-	DB *sql.DB
+	DB db.DB
 }
 
-func NewUserService(db *sql.DB) *UserService {
-	return &UserService{DB: db}
+func NewUserService(db db.DB) UserService {
+	return UserService{DB: db}
 }
 
 // Ensure service implements interface.
