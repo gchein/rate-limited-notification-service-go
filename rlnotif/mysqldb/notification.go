@@ -8,14 +8,15 @@ import (
 	"time"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/db"
 )
 
 type NotificationService struct {
-	DB *sql.DB
+	DB db.DB
 }
 
-func NewNotificationService(db *sql.DB) *NotificationService {
-	return &NotificationService{DB: db}
+func NewNotificationService(db db.DB) NotificationService {
+	return NotificationService{DB: db}
 }
 
 // Ensure service implements interface.

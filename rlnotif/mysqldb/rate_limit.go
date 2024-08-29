@@ -1,19 +1,19 @@
 package mysqldb
 
 import (
-	"database/sql"
 	"fmt"
 	"regexp"
 
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif"
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/db"
 )
 
 type RateLimitService struct {
-	DB *sql.DB
+	DB db.DB
 }
 
-func NewRateLimitService(db *sql.DB) *RateLimitService {
-	return &RateLimitService{DB: db}
+func NewRateLimitService(db db.DB) RateLimitService {
+	return RateLimitService{DB: db}
 }
 
 // Ensure service implements interface.

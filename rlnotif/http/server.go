@@ -1,20 +1,20 @@
 package http
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 
+	"github.com/gchein/rate-limited-notification-service-go/rlnotif/db"
 	"github.com/gchein/rate-limited-notification-service-go/rlnotif/mysqldb"
 	"github.com/gorilla/mux"
 )
 
 type Server struct {
 	addr string
-	db   *sql.DB
+	db   *db.DB
 }
 
-func NewServer(addr string, db *sql.DB) *Server {
+func NewServer(addr string, db *db.DB) *Server {
 	return &Server{
 		addr: addr,
 		db:   db,
@@ -24,12 +24,12 @@ func NewServer(addr string, db *sql.DB) *Server {
 func (s *Server) Run() error {
 	router := mux.NewRouter()
 
-	notificationService := mysqldb.NewNotificationService(s.db)
-	notificationHandler := NewNotificationHandler(notificationService)
+	notificationService := mysqldb.NewNotificationService(*s.db)
+	notificationHandler := NewNotificationHandler(&notificationService)
 	notificationHandler.RegisterNotificationRoutes(router)
 
-	rateLimitService := mysqldb.NewRateLimitService(s.db)
-	rateLimitHandler := NewRateLimitHandler(rateLimitService)
+	rateLimitService := mysqldb.NewRateLimitService(*s.db)
+	rateLimitHandler := NewRateLimitHandler(&rateLimitService)
 	rateLimitHandler.RegisterRateLimitRoutes(router)
 
 	log.Println("Listening on", s.addr)

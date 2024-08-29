@@ -1,7 +1,6 @@
 package apiserver
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -17,7 +16,7 @@ import (
 func Run() {
 	db := initStorage()
 
-	rateLimitService := mysqldb.NewRateLimitService(db)
+	rateLimitService := mysqldb.NewRateLimitService(*db)
 
 	rateLimits, err := rateLimitService.RateLimits()
 	if err != nil {
@@ -31,7 +30,7 @@ func Run() {
 	}
 }
 
-func initStorage() (dbconn *sql.DB) {
+func initStorage() (dbconn *db.DB) {
 	cfg := mysql.Config{
 		User:                 config.Envs.DBUser,
 		Passwd:               config.Envs.DBPassword,
@@ -48,7 +47,7 @@ func initStorage() (dbconn *sql.DB) {
 		log.Fatal(err)
 	}
 
-	err = dbconn.Ping()
+	err = (*dbconn).Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,7 +62,7 @@ func Seed() {
 
 	// User seeds
 	log.Println("Seeding users...")
-	userService := mysqldb.NewUserService(db)
+	userService := mysqldb.NewUserService(*db)
 
 	u1 := &rlnotif.User{
 		Name:      "greg",
@@ -101,7 +100,7 @@ func Seed() {
 
 	// Rate Limit seeds
 	log.Println("Seeding rate limits...")
-	rateLimitService := mysqldb.NewRateLimitService(db)
+	rateLimitService := mysqldb.NewRateLimitService(*db)
 
 	rl1 := &rlnotif.RateLimit{
 		NotificationType: "Status Update",

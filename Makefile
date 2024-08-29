@@ -30,3 +30,26 @@ build:
 
 run: build
 	@./bin/rlnotif
+
+
+
+test_db_create:
+	@echo "Creating test database..."
+	mysql -u $(DB_USER) -p -e "CREATE DATABASE IF NOT EXISTS $(TEST_DB_NAME);"
+
+test_db_drop:
+	@echo "Dropping test database..."
+	mysql -u $(DB_USER) -p -e "DROP DATABASE IF EXISTS $(TEST_DB_NAME);"
+
+test_db_reset: test_db_drop test_db_create
+
+test_db_migrate:
+	@echo "Running database migrations..."
+	for file in rlnotif/mysqldb/migration/*.sql; do \
+		echo "Running migration: $$file"; \
+		mysql -u $(DB_USER) -p $(TEST_DB_NAME) < "$$file"; \
+	done
+
+
+test: test_db_reset test_db_migrate
+# Here will enter the actual test command

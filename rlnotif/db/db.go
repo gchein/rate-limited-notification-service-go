@@ -7,12 +7,22 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-func NewMySQLStorage(cfg *mysql.Config) (*sql.DB, error) {
-	db, err := sql.Open("mysql", cfg.FormatDSN())
+type DB interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(string, ...any) (*sql.Rows, error)
+	QueryRow(string, ...any) *sql.Row
+	Ping() error
+	Begin() (*sql.Tx, error)
+}
+
+func NewMySQLStorage(cfg *mysql.Config) (*DB, error) {
+	var err error
+	var newDB DB
+	newDB, err = sql.Open("mysql", cfg.FormatDSN())
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return db, nil
+	return &newDB, nil
 }
