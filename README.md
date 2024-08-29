@@ -116,3 +116,21 @@ This repo is a Golang implementation of [the first Rails implementation](https:/
 
     {"id":XX,"notificationType":"Daily News","timeWindow":"Minute","maxLimit":2}
   ```
+
+  **4. DELETE /rate-limits/{ID}**
+
+  Finally, the DELETE endpoint should be used only if you want to delete a specific rate limit from the DB. The usage is pretty simple, you only need to send a DELETE request with a valid id as the end of the request path.
+
+## Running the test suite
+
+To run the test suite, first you need to run at least once the command below to create the test database. This command wil reset and migrate the test database. After you run it once, you do not need to run it again, as the tests are made as transactions to the DB that are rolled back, so this database should always be empty.
+
+  ```sh
+  make test_db_prepare
+  ```
+
+After you ran the command above for preparing the database, run the command below to run the actual tests:
+
+  ```sh
+  make test
+  ```
