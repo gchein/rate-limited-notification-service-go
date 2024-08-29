@@ -2,6 +2,10 @@
 
 include .env
 
+DB_USER ?= root
+DB_NAME ?= rlnotif
+TEST_DB_NAME ?= rlnotif_test
+
 # Commands
 db_create:
 	@echo "Creating database..."
@@ -15,7 +19,7 @@ db_reset: db_drop db_create
 
 db_migrate:
 	@echo "Running database migrations..."
-	for file in rlnotif/mysqldb/migration/*.sql; do \
+	@for file in rlnotif/mysqldb/migration/*.sql; do \
 		echo "Running migration: $$file"; \
 		mysql -u $(DB_USER) -p $(DB_NAME) < "$$file"; \
 	done
@@ -44,7 +48,7 @@ test_db_reset: test_db_drop test_db_create
 
 test_db_migrate:
 	@echo "Running database migrations..."
-	for file in rlnotif/mysqldb/migration/*.sql; do \
+	@for file in rlnotif/mysqldb/migration/*.sql; do \
 		echo "Running migration: $$file"; \
 		mysql -u $(DB_USER) -p $(TEST_DB_NAME) < "$$file"; \
 	done
