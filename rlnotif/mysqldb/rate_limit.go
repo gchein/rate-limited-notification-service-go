@@ -12,8 +12,8 @@ type RateLimitService struct {
 	DB db.DB
 }
 
-func NewRateLimitService(db db.DB) RateLimitService {
-	return RateLimitService{DB: db}
+func NewRateLimitService(db db.DB) *RateLimitService {
+	return &RateLimitService{DB: db}
 }
 
 // Ensure service implements interface.

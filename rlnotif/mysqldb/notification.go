@@ -15,8 +15,8 @@ type NotificationService struct {
 	DB db.DB
 }
 
-func NewNotificationService(db db.DB) NotificationService {
-	return NotificationService{DB: db}
+func NewNotificationService(db db.DB) *NotificationService {
+	return &NotificationService{DB: db}
 }
 
 // Ensure service implements interface.

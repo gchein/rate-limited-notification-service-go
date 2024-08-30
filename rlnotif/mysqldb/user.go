@@ -12,8 +12,8 @@ type UserService struct {
 	DB db.DB
 }
 
-func NewUserService(db db.DB) UserService {
-	return UserService{DB: db}
+func NewUserService(db db.DB) *UserService {
+	return &UserService{DB: db}
 }
 
 // Ensure service implements interface.
